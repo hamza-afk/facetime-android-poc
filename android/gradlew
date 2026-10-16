@@ -1,0 +1,8 @@
+#!/bin/sh
+APP_BASE_NAME=`basename "$0"`
+DIRNAME=`dirname "$0"`
+[ "$DIRNAME" = "" ] && DIRNAME=.
+APP_HOME=`cd "$DIRNAME" && pwd`
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+JAVACMD=java
+exec "$JAVACMD" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
