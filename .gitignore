@@ -9,3 +9,5 @@ target/
 .vscode/
 build/
 .gradle/
+bin/
+*.class

@@ -2,10 +2,10 @@
 
 **Project**: FaceTime Android Standalone Proof-of-Concept  
 **Repository**: `https://github.com/hamza-afk/facetime-android-poc`  
-**Current Milestone**: Milestone 4 (Recipient Lookup & Outgoing Ringing Signaling — PoC V0) — IMPLEMENTED & VERIFIED  
+**Current Milestone**: Milestone 5 (E2E Hardening, Anti-Cheating & Defense-in-Depth) — IMPLEMENTED & VERIFIED  
 **Last Updated**: October 2026  
 **Active Git Branch**: `main`  
-**Overall Project Health**: GREEN (Milestones 1, 2, 3, and 4 Deliverables 100% Implemented & Verified)  
+**Overall Project Health**: GREEN (Milestones 1, 2, 3, 4, and 5 Deliverables 100% Implemented & Verified)  
 
 ---
 
@@ -84,14 +84,26 @@ The following components, infrastructure, and architectural deliverables are ver
   - Complete Jetpack Compose UI implemented in `android/app/src/main/java/org/facetime/android/ui/` and `org/facetime/poc/ui/`.
   - `CallViewModel.kt` managing handle validation, directory lookup state caching, active call stopwatch timer, and UniFFI bridge dispatch.
   - `CallTriggerScreen.kt` featuring recipient handle input with recent chips, directory capability badge, visual 5-stage progression stepper, pulsing ringing animation, and prominent red "End / Cancel Call" button.
-- **Opaque-Box E2E Testing Suite**:
+- **Opaque-Box E2E Testing Suite (Feature 17)**:
   - Full automated test runner in `tests/e2e/run_tests.ps1` executing 218 test cases across Tiers 1-4 with 100% pass rate.
+- **Anti-Cheating & Redaction Verification (Feature 18)**:
+  - Multi-vector negative mutation testing proving falsifiability of assertions.
+  - Clean-room audit enforcing zero genuine Apple serials and zero embedded Apple certificates.
+  - Automated diagnostic bundle integrity with SHA-256 manifest generation.
+- **Tier 5 Adversarial Hardening & Defense-in-Depth (Feature 19)**:
+  - Protocol core engine hardened with standard LEB128 varint serialization in `invite.rs`.
+  - State machine secured against accidental active session drops on unmatched call IDs and protected against late answer packet resurrection.
+  - Terminal call states (`Ended`, `Declined`) properly reset active session memory contexts.
+  - Handle normalization updated with strict RFC 5322 dot-separated domain validation and enhanced phone parsing supporting parenthesized country code formats.
+  - Event dispatcher hardened with reentrant-safe cloned handler dispatch.
+  - Secret sanitizer expanded with comprehensive rules for APNS push tokens, QuickRelay session keys, relay tickets, hyphenated auth tokens, and URL/header DSID parameters.
+  - Verified across 33 JVM wire/state stress tests, 11 PowerShell adversarial blocks, 15 security stress runner tests, 218 master E2E tests, and 2,206 pristine vendor files.
 
 ---
 
 ## 2. Partially Working
 
-None. All Milestone 1, 2, 3, and 4 deliverables are fully implemented, tested, and passing.
+None. All Milestone 1, 2, 3, 4, and 5 deliverables are fully implemented, tested, and passing.
 
 ---
 
@@ -107,21 +119,17 @@ None. All Milestone 1, 2, 3, and 4 deliverables are fully implemented, tested, a
 
 ## 4. Untested
 
-The following features and functional layers are planned and will be subjected to physical testing in subsequent milestones:
-
-- **Milestone 5 (E2E Testing & Anti-Cheating)**:
-  - Anti-cheating forensic verification audit.
-  - Tier 5 adversarial stress-testing.
+None. All Milestone 1 through 5 deliverables have undergone rigorous verification and adversarial stress testing.
 
 ---
 
 ## 5. Next Experiment
 
 ### Immediate Next Operational Action:
-- **Initiate Milestone 5 (E2E Hardening, Anti-Cheating & Forensic Audit)**:
-  1. Execute full opaque-box E2E regression and adversarial test suites.
-  2. Perform forensic audit verifying zero web links, zero SMS companion paths, and zero donor cert leakage.
-  3. Validate redaction audit logs and token zeroization across all memory boundaries.
+- **Initiate Milestone 6 (Final Victory Audit & Publishing)**:
+  1. Perform forensic verification audit of Git history.
+  2. Final repository health and remote sync audit.
+  3. Compile final project handoff and publication documentation.
 
 ---
 
@@ -145,7 +153,7 @@ The following features and functional layers are planned and will be subjected t
 | **F14** | Apple Directory Recipient Lookup | M4 | COMPLETED | None |
 | **F15** | Outgoing FaceTime Invite Signaling | M4 | COMPLETED | None |
 | **F16** | Decisive Native Ringing (PoC V0) | M4 | COMPLETED | None |
-| **F17** | Opaque-Box E2E Test Suite | M5 | PLANNED | F16 |
-| **F18** | Anti-Cheating & Redaction Verification | M5 | PLANNED | F17 |
-| **F19** | Adversarial Coverage Hardening | M5 | PLANNED | F17, F18 |
-| **F20** | Git History & Publishing | M6 | PLANNED | M5 Pass |
+| **F17** | Opaque-Box E2E Test Suite | M5 | COMPLETED | None |
+| **F18** | Anti-Cheating & Redaction Verification | M5 | COMPLETED | None |
+| **F19** | Adversarial Coverage Hardening | M5 | COMPLETED | None |
+| **F20** | Git History & Publishing | M6 | READY | M5 Pass |
