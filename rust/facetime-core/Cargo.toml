@@ -1,0 +1,30 @@
+[package]
+name = "facetime-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["FaceTime Android PoC Team"]
+description = "FaceTime Android Protocol Core Engine & Clean-Room Validation Architecture"
+
+[dependencies]
+# Serialization & Plist
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+plist = "1.6"
+
+# Cryptography & Hashing
+sha2 = "0.10"
+hmac = "0.12"
+ring = "0.17"
+rand = "0.8"
+base64 = "0.22"
+hex = "0.4"
+
+# Utilities & Error Handling
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.8", features = ["v4", "v5"] }
+log = "0.4"
+regex = "1.10"
+
+[dev-dependencies]
+env_logger = "0.11"
