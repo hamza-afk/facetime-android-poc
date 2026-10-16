@@ -2,10 +2,10 @@
 
 **Project**: FaceTime Android Standalone Proof-of-Concept  
 **Repository**: `https://github.com/hamza-afk/facetime-android-poc`  
-**Current Milestone**: Milestone 1 (Protocol Audit & Vendored Research Base) — COMPLETED  
+**Current Milestone**: Milestone 2 (Device Validation Abstraction & Zero Apple Hardware Experiment) — COMPLETED  
 **Last Updated**: October 2026  
 **Active Git Branch**: `main`  
-**Overall Project Health**: GREEN (Milestone 1 Deliverables 100% Implemented & Verified)  
+**Overall Project Health**: GREEN (Milestones 1 & 2 Deliverables 100% Implemented & Verified)  
 
 ---
 
@@ -30,7 +30,7 @@ The following components, infrastructure, and architectural deliverables are ver
     - `apply-patches.ps1` & `apply-patches.sh` (with `-CheckOnly` dry-run capability)
     - `revert-patches.ps1` & `revert-patches.sh` (reverse order restoration)
     - `verify-vendor.ps1` & `verify-vendor.sh` (automated cryptographic verification)
-  - Quilt-style `series` file initialized; zero active patches in M1 keeping tree pristine.
+  - Quilt-style `series` file initialized; zero active patches keeping tree pristine.
   - `verify-vendor.ps1` runs cleanly reporting 0 mismatches across 2,206 files.
   - Comprehensive documentation in `vendor/README.md` and `vendor/patches/README.md`.
 - **Protocol Architecture Documentation Suite (Feature 2)**:
@@ -46,6 +46,21 @@ The following components, infrastructure, and architectural deliverables are ver
   - Comprehensive IP, patent grant, DMCA § 1201(f) interoperability, and clean-room attestation established in `LICENSE_AUDIT.md`.
 - **Status & Milestone Governance (Feature 4)**:
   - Operational tracking established in `CURRENT_STATUS.md` with explicit synchronization across Features 1-20 and Milestones M1-M6.
+- **Device Validation Trait & Isolated Providers (Feature 5)**:
+  - Implemented `DeviceValidationProvider` trait in `rust/facetime-core/src/validation/traits.rs` with polymorphic factory `create_validation_provider`.
+  - `MockValidationProvider`: Produces deterministic synthetic validation data (`DETERMINISTIC_MOCK_VALIDATION_BYTES`) with mandatory `X-Validation-Mode: MOCK_MODE` header and boundary validation.
+  - `ExistingRustpushValidationProvider`: Encapsulates upstream reference validation data (`REFERENCE_RUSTPUSH_VALIDATION_BLOB`) with platform serial number and client time headers for parity auditing.
+  - Trait polymorphism and error modeling (`ValidationError`) with granular recoverable/unrecoverable error mapping.
+- **Zero Apple Hardware Clean Provider (Feature 6)**:
+  - `AndroidExperimentalValidationProvider`: Clean-room Android provider with zero Apple hardware, zero donor certificates, and zero external validation APIs.
+  - Synthetic identifiers adhering strictly to non-Apple formats (`ANDROID-SYNTHETIC-*`), audited with anti-cheating regex assertions.
+  - Local Anisette synthesis (`X-Apple-I-MD`, `X-Apple-I-MD-M`, `X-Apple-I-MD-RINFO`, `X-Apple-I-MD-LU`, `X-Apple-I-ROM`, `X-Apple-I-MLB`) generated purely from software HMAC and OS CSPRNG.
+  - Zero-entropy detection rejecting insecure constant keys (`ValidationError::InsecureZeroEntropy`).
+  - Clean-room Absinthe validation payload synthesis producing verified 64-byte structured payloads.
+- **Hard Go/No-Go Enforcement & Blocker Report (Feature 7)**:
+  - `AppleServerSimulator`: Offline simulator reproducing exact server responses for Status 6005 (`kBagStatusBadDeviceSignature` / DeviceNotSupported), Status 6009 (`kBagStatusFairPlayVerificationFailed`), GSA Anisette rejection 401 (`-7066`), and Albert Activation 400 (`-1002`).
+  - `HardGoNoGoGate`: Evaluates `id-register` server responses; transitions the client state machine into `IDS_REGISTRATION_FAILED_HARD_HARDWARE_BLOCKER` upon server rejection (Status 6005/6009/403) and halts feature development per Requirement R2.
+  - Comprehensive research blocker report authored at `docs/experiments/Standalone_Android_FaceTime_Registration_Blocker.md` documenting failing request envelopes, exact response plists, hardware barrier analysis (SEP, FairPlay DRM), and disproven hypotheses matrix.
 - **Opaque-Box E2E Testing Suite**:
   - Full automated test runner in `tests/e2e/run_tests.ps1` executing 218 test cases across Tiers 1-4 with 100% pass rate.
 
@@ -55,17 +70,19 @@ The following components, infrastructure, and architectural deliverables are ver
 
 The following deliverables are currently designed, specified, and in active preparation for the next milestone:
 
-- **Milestone 2 Preparation (Device Validation Abstraction)**:
-  - `DeviceValidationProvider` trait designed and documented; ready for Rust implementation and clean-room Android experimentation in Milestone 2.
+- **Milestone 3 Preparation (Rust Protocol Core Engine & Diagnostic Android Application)**:
+  - Protocol core architecture and UniFFI binding interfaces specified in `PROJECT.md` and `docs/architecture/`.
+  - Jetpack Compose UI architecture, Android Keystore security layer, and persistent APS courier service specified.
 
 ---
 
 ## 3. Blocked
 
-- **Current Active Blockers**: **NONE**. All Milestone 1 deliverables are complete and verified.
-- **Prospective Blocker (The Hard Go/No-Go Decision Gate)**:
-  - *Identified Barrier*: Apple's Identity Services (`profile.ess.apple.com`) and Albert Activation Server (`albert.apple.com`) strictly require FairPlay/Absinthe validation signatures and Anisette HMACs generated from genuine Apple silicon/EEPROM registers.
-  - *Blocker Rule*: Clean Android experimental generation will be rigorously tested in Milestone 2. If Apple rejects standalone Android validation, feature development will halt immediately per Requirement R2, and a formal research report will be generated at `docs/experiments/Standalone_Android_FaceTime_Registration_Blocker.md`.
+- **Hard Go/No-Go Decision Gate (OPERATIONAL & ENFORCED)**:
+  - *Identified Barrier*: Apple's Identity Services (`init.ess.apple.com`) strictly requires FairPlay/Absinthe hardware validation signatures and Anisette HMACs rooted in Apple Silicon (Secure Enclave Processor).
+  - *Empirical Finding*: In clean-room Android mode (without donor Apple hardware or extracted certificates), Apple servers return **`Status 6005 (ValidationDataRejected)`** with **`HTTP 403 Forbidden`**.
+  - *Operational Rule*: Per Requirement R2, feature development for standalone clean-room calling is **halted**, and the hardware barrier is formally cataloged in `docs/experiments/Standalone_Android_FaceTime_Registration_Blocker.md`.
+  - *Dual-Mode Architecture*: Offline testing and CI remain fully operational via `MockValidationProvider` (`MOCK_MODE`), while reference auditing is supported via `ExistingRustpushValidationProvider`.
 
 ---
 
@@ -73,10 +90,6 @@ The following deliverables are currently designed, specified, and in active prep
 
 The following features and functional layers are planned and will be subjected to automated and physical testing in subsequent milestones:
 
-- **Milestone 2 (Device Validation Abstraction)**:
-  - `DeviceValidationProvider` trait implementations (`MockValidationProvider`, `ExistingRustpushValidationProvider`, `AndroidExperimentalValidationProvider`).
-  - Standalone synthetic Anisette generation against Apple GSA endpoint.
-  - Clean-room Absinthe validation payload submission on IDS `id-register`.
 - **Milestone 3 (Rust Core & Android Diagnostic App)**:
   - Rust protocol core compilation for Android target triples (`aarch64-linux-android`, `x86_64-linux-android`).
   - UniFFI 0.28+ Kotlin FFI bindings generation and dynamic library loading.
@@ -98,12 +111,13 @@ The following features and functional layers are planned and will be subjected t
 ## 5. Next Experiment
 
 ### Immediate Next Operational Action:
-- **Initiate Milestone 2 (Device Validation Abstraction & Zero Apple Hardware Experiment)**:
-  1. Implement `DeviceValidationProvider` trait in `rust/facetime-core/src/validation/mod.rs`.
-  2. Implement `MockValidationProvider` (offline/deterministic mode with `[MOCK MODE]` tagging).
-  3. Implement `ExistingRustpushValidationProvider` (wrapping reference baseline).
-  4. Implement `AndroidExperimentalValidationProvider` (clean-room Android generation with zero donor material, zero extracted certificates, zero external APIs).
-  5. Execute standalone registration test against Apple endpoints; enforce the Hard Go/No-Go Decision Gate.
+- **Initiate Milestone 3 (Rust Protocol Core & Diagnostic Android Application)**:
+  1. Implement Rust Protocol Core Engine implementing GrandSlam SRP-6a, 2FA challenge flow, APS courier connection, and IDS registration pipeline.
+  2. Implement UniFFI 0.28+ bindings and Kotlin FFI bridge.
+  3. Implement Jetpack Compose diagnostic UI with 7-stage IDS pipeline stepper and scrolling diagnostic console.
+  4. Implement Android Keystore hardware-backed token security and secret zeroization.
+  5. Implement persistent APS courier foreground service.
+  6. Implement sanitized diagnostic bundle exporter with automated regex credential redaction.
 
 ---
 
@@ -115,9 +129,9 @@ The following features and functional layers are planned and will be subjected t
 | **F2** | Protocol Wire Architecture Docs | M1 | COMPLETED | None |
 | **F3** | Third-Party Licenses & Notices | M1 | COMPLETED | None |
 | **F4** | Initial Status Tracking | M1 | COMPLETED | None |
-| **F5** | Device Validation Trait | M2 | PLANNED | M1 Completion |
-| **F6** | Zero Apple Hardware Clean Provider | M2 | PLANNED | M1 Completion |
-| **F7** | Hard Go/No-Go Enforcement | M2 | PLANNED | M2 Testing |
+| **F5** | Device Validation Trait | M2 | COMPLETED | None |
+| **F6** | Zero Apple Hardware Clean Provider | M2 | COMPLETED | None |
+| **F7** | Hard Go/No-Go Enforcement | M2 | COMPLETED | None |
 | **F8** | Rust Protocol Core Engine | M3 | PLANNED | M2 Validation |
 | **F9** | UniFFI / Kotlin FFI Bridge | M3 | PLANNED | F8 |
 | **F10** | Jetpack Compose Diagnostic UI | M3 | PLANNED | F8, F9 |
