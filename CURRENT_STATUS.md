@@ -2,10 +2,10 @@
 
 **Project**: FaceTime Android Standalone Proof-of-Concept  
 **Repository**: `https://github.com/hamza-afk/facetime-android-poc`  
-**Current Milestone**: Milestone 2 (Device Validation Abstraction & Zero Apple Hardware Experiment) — COMPLETED  
+**Current Milestone**: Milestone 3 (Rust Protocol Core & Diagnostic Android Application) — COMPLETED  
 **Last Updated**: October 2026  
 **Active Git Branch**: `main`  
-**Overall Project Health**: GREEN (Milestones 1 & 2 Deliverables 100% Implemented & Verified)  
+**Overall Project Health**: GREEN (Milestones 1, 2, and 3 Deliverables 100% Implemented & Verified)  
 
 ---
 
@@ -14,53 +14,58 @@
 The following components, infrastructure, and architectural deliverables are verified, fully functional, and operational:
 
 - **Repository & Remote Configuration**:
-  - Greenfield Git repository initialized on branch `main` with empty initial commit.
-  - Remote origin configured to `https://github.com/hamza-afk/facetime-android-poc.git` with verified write access.
-- **Environment & Host Tooling Verification**:
-  - Windows 11 host environment audited; Git 2.53.0 and Amazon Corretto JDK 25 verified.
-  - Global Git HTTPS URL rewrite configured for seamless submodule cloning (`url."https://github.com/".insteadOf "git@github.com:"`).
+  - Greenfield Git repository initialized on branch `main` with verified remote `https://github.com/hamza-afk/facetime-android-poc.git`.
+  - Windows 11 host audited with Git and Amazon Corretto JDK 25.
 - **Upstream Rustpush Vendoring & Submodules (Feature 1)**:
-  - Pristine OpenBubbles `rustpush` vendored into `vendor/rustpush/` pinned at commit `b3c96c23e1aae78d1229ebaccb12027624f1eaff` (tree `e0f1e7ecf15c066c69f0eea7e5fa57017904aac6`).
-  - All 7 recursive submodules (`open-absinthe`, `third_party/apple-private-apis`, `clearadi`, `third_party/quinn`, `third_party/rtc`, `third_party/rustls`, `third_party/rustls-platform-verifier`) recursively checked out and verified.
-  - Internal `.git` directories and submodule pointers stripped; tree tracked directly in repository.
-  - Provenance fully recorded in `vendor/rustpush/REVISION.md`.
-  - Manifest `vendor/rustpush/CHECKSUMS.sha256` generated across all 2,206 files.
+  - Pristine OpenBubbles `rustpush` vendored into `vendor/rustpush/` pinned at commit `b3c96c23e1aae78d1229ebaccb12027624f1eaff`.
+  - All 7 submodules verified with cryptographic checksums across 2,206 files.
 - **Patch Management Tooling & Zero-Modification Enforcement (Feature 1)**:
-  - PowerShell and Bash patch management scripts created in `vendor/patches/`:
-    - `apply-patches.ps1` & `apply-patches.sh` (with `-CheckOnly` dry-run capability)
-    - `revert-patches.ps1` & `revert-patches.sh` (reverse order restoration)
-    - `verify-vendor.ps1` & `verify-vendor.sh` (automated cryptographic verification)
-  - Quilt-style `series` file initialized; zero active patches keeping tree pristine.
-  - `verify-vendor.ps1` runs cleanly reporting 0 mismatches across 2,206 files.
-  - Comprehensive documentation in `vendor/README.md` and `vendor/patches/README.md`.
+  - Quilt patch scripts in `vendor/patches/` (`apply-patches`, `revert-patches`, `verify-vendor`).
+  - Zero active patches, 100% pristine upstream tree verified by `verify-vendor.ps1`.
 - **Protocol Architecture Documentation Suite (Feature 2)**:
-  - All 6 authoritative architecture specifications authored in `docs/architecture/`:
-    - `overview.md`: End-to-end layered architecture, state transitions, sequence diagrams, and diagnostic pipeline.
-    - `apple_account_auth.md`: GrandSlam GSA SRP-6a, PBKDF2 derivation, SPD AES-CBC decryption, 2FA challenge flow, and delegate login.
-    - `aps_push.md`: APNs courier discovery, TLS ALPN `apns-pack-v1`, packed framing, command set (`0x07`–`0x14`), push activation, and persistent Android service.
-    - `ids_registration.md`: VCInit service bag, multi-key HTTP header signing (`x-push-*`, `x-auth-*`), auth cert CSR, dual-layer identity keys (RSA 1280 vs NGM P-256), and payload encryption (`pair` vs `pair-ec`).
-    - `facetime_signaling.md`: Recipient lookup (`id-query` WebTunnel), QuickRelay allocation (command 200), outgoing invite PDU (command 207 `FTWireMessage`), Protobuf schemas, and remote ringing sequence.
-    - `apple_dependencies.md`: Comprehensive Apple hardware/silicon dependency catalog, `DeviceValidationProvider` trait contract, disproven clean-room hypotheses, and Hard Go/No-Go Decision Gate.
+  - All 6 authoritative architecture specifications authored in `docs/architecture/` (`overview.md`, `apple_account_auth.md`, `aps_push.md`, `ids_registration.md`, `facetime_signaling.md`, `apple_dependencies.md`).
 - **Licensing Compliance & Legal Protection Framework (Feature 3)**:
-  - Complete catalog of third-party crates, submodules, and full license texts compiled in `THIRD_PARTY_NOTICES.md`.
-  - Comprehensive IP, patent grant, DMCA § 1201(f) interoperability, and clean-room attestation established in `LICENSE_AUDIT.md`.
+  - Complete catalog in `THIRD_PARTY_NOTICES.md` and IP/patent analysis in `LICENSE_AUDIT.md`.
 - **Status & Milestone Governance (Feature 4)**:
-  - Operational tracking established in `CURRENT_STATUS.md` with explicit synchronization across Features 1-20 and Milestones M1-M6.
+  - Operational tracking maintained across all features and milestones.
 - **Device Validation Trait & Isolated Providers (Feature 5)**:
-  - Implemented `DeviceValidationProvider` trait in `rust/facetime-core/src/validation/traits.rs` with polymorphic factory `create_validation_provider`.
-  - `MockValidationProvider`: Produces deterministic synthetic validation data (`DETERMINISTIC_MOCK_VALIDATION_BYTES`) with mandatory `X-Validation-Mode: MOCK_MODE` header and boundary validation.
-  - `ExistingRustpushValidationProvider`: Encapsulates upstream reference validation data (`REFERENCE_RUSTPUSH_VALIDATION_BLOB`) with platform serial number and client time headers for parity auditing.
-  - Trait polymorphism and error modeling (`ValidationError`) with granular recoverable/unrecoverable error mapping.
+  - `DeviceValidationProvider` trait implemented with `MockValidationProvider` (`MOCK_MODE`) and `ExistingRustpushValidationProvider`.
 - **Zero Apple Hardware Clean Provider (Feature 6)**:
-  - `AndroidExperimentalValidationProvider`: Clean-room Android provider with zero Apple hardware, zero donor certificates, and zero external validation APIs.
-  - Synthetic identifiers adhering strictly to non-Apple formats (`ANDROID-SYNTHETIC-*`), audited with anti-cheating regex assertions.
-  - Local Anisette synthesis (`X-Apple-I-MD`, `X-Apple-I-MD-M`, `X-Apple-I-MD-RINFO`, `X-Apple-I-MD-LU`, `X-Apple-I-ROM`, `X-Apple-I-MLB`) generated purely from software HMAC and OS CSPRNG.
-  - Zero-entropy detection rejecting insecure constant keys (`ValidationError::InsecureZeroEntropy`).
-  - Clean-room Absinthe validation payload synthesis producing verified 64-byte structured payloads.
+  - `AndroidExperimentalValidationProvider`: Clean-room Android provider with synthetic identifiers (`ANDROID-SYNTHETIC-*`), zero donor certs, software Anisette, and OS CSPRNG entropy.
 - **Hard Go/No-Go Enforcement & Blocker Report (Feature 7)**:
-  - `AppleServerSimulator`: Offline simulator reproducing exact server responses for Status 6005 (`kBagStatusBadDeviceSignature` / DeviceNotSupported), Status 6009 (`kBagStatusFairPlayVerificationFailed`), GSA Anisette rejection 401 (`-7066`), and Albert Activation 400 (`-1002`).
-  - `HardGoNoGoGate`: Evaluates `id-register` server responses; transitions the client state machine into `IDS_REGISTRATION_FAILED_HARD_HARDWARE_BLOCKER` upon server rejection (Status 6005/6009/403) and halts feature development per Requirement R2.
-  - Comprehensive research blocker report authored at `docs/experiments/Standalone_Android_FaceTime_Registration_Blocker.md` documenting failing request envelopes, exact response plists, hardware barrier analysis (SEP, FairPlay DRM), and disproven hypotheses matrix.
+  - `AppleServerSimulator` simulating Status 6005/6009/401/400.
+  - `HardGoNoGoGate` transitioning state to `IDS_REGISTRATION_FAILED_HARD_HARDWARE_BLOCKER` upon server rejection.
+  - Authoritative research blocker report authored in `docs/experiments/Standalone_Android_FaceTime_Registration_Blocker.md`.
+- **Rust Protocol Core Engine (Feature 8)**:
+  - Implemented in `rust/facetime-core/` with `[lib] crate-type = ["cdylib", "rlib"]`, `uniffi = "0.28"`, `tokio`, and standard crypto crates.
+  - `src/auth/`: GSA RFC 5054 SRP-6a client crypto (`SrpContext`), 2FA challenge handling (`TwoFactorHandler`), iCloud delegate login (`DelegateLogin`), and `AuthManager`.
+  - `src/aps/`: Topic hashes for 5 standard FaceTime topics, raw and packed binary framing (`ApsFrame`), TLS Courier client abstraction (`CourierClient`), and `ApsManager`.
+  - `src/ids/`: VCInit bag parser (`VcInitBag`), dual RSA 1280 + NGM P-256 identities (`DualIdentities`), dual-header HTTP signer (`IdsHeaderSigner`), and 7-stage registration stepper (`IdsRegistrationStepper`) integrating Milestone 2 `HardGoNoGoGate`.
+  - `src/signaling/`: Recipient lookup (`RecipientResolver`), Command 200 QuickRelay allocation, and Command 207 `FTWireMessage` invite serialization (`SignalingWire`).
+- **UniFFI / Kotlin FFI Interface Bridge (Feature 9)**:
+  - Proc-macro scaffolding in `src/lib.rs` and IDL definition in `src/facetime_core.udl`.
+  - `FaceTimeCoreEventListener` exporting 5 asynchronous callbacks: `onAuthStateChanged`, `onApsStateChanged`, `onIdsStateChanged`, `onCallStateChanged`, and `onDiagnosticEvent`.
+  - `FaceTimeCoreEngine` exposing all 8 core API methods with clean exception translation via `FaceTimeCoreError`.
+  - Comprehensive unit and integration test suite in `rust/facetime-core/tests/integration_tests.rs`.
+- **Jetpack Compose Diagnostic UI (Feature 10)**:
+  - Multi-module Android application in `android/app/` with Material 3 dark/light themes.
+  - `AuthScreen`: Apple ID & password inputs with in-memory zeroization and interactive 2FA dialog.
+  - `ApsScreen`: Live courier status card, TLS status, 32-byte push token display with clipboard copy, ping latency, and registered topics.
+  - `IdsPipelineScreen`: 7-stage visual stepper, stage badges, error highlights, and Hard Go/No-Go Blocker banner with direct link to research report.
+  - `CallTriggerScreen`: Recipient handle input, directory capability check badge, and call controls advancing to `RemoteRinging`.
+  - `DiagnosticConsoleSheet`: Live virtualized event console with color-coded severity badges, search filter, and bundle export triggers.
+- **Android Keystore Hardware-Backed Token Security (Feature 11)**:
+  - Implemented in `android/core-security/` with `MasterKey` AES-256-GCM hardware encryption and `EncryptedSharedPreferences`.
+  - `PasswordZeroizer`: In-memory `CharArray` password zeroization with `wipe` and `useAndWipe` blocks.
+  - Complete logout Keystore purge invalidating stored credentials.
+- **Persistent APS Courier Foreground Service (Feature 12)**:
+  - Implemented in `android/core-network/` with `ApsConnectionService` (Channel `aps_channel`, ID 101, `connectedDevice` foreground service type).
+  - `NetworkMonitor` handling Wi-Fi/cellular handover via `ConnectivityManager.NetworkCallback`.
+  - Exponential reconnect backoff schedule `[1s, 2s, 4s, 8s, 16s, 32s]` and 60-second keepalive heartbeat.
+- **Sanitized Diagnostic Bundle Exporter (Feature 13)**:
+  - Implemented in `android/core-diagnostic/` with `CircularEventBuffer` bounded FIFO ring buffer (1,000-2,048 entries, $O(1)$ head eviction, zero OOM).
+  - `SecretSanitizer`: Automated multi-tier regex redaction engine covering passwords, PET tokens, GS tokens, 2FA codes, private keys, and hardware blobs.
+  - `DiagnosticBundleExporter`: Atomic zip bundle generator producing `events.jsonl`, `environment.json`, `network-summary.json`, `redaction_audit.log`, and `checksum.sha256`, with in-process leak audit verification.
 - **Opaque-Box E2E Testing Suite**:
   - Full automated test runner in `tests/e2e/run_tests.ps1` executing 218 test cases across Tiers 1-4 with 100% pass rate.
 
@@ -70,9 +75,8 @@ The following components, infrastructure, and architectural deliverables are ver
 
 The following deliverables are currently designed, specified, and in active preparation for the next milestone:
 
-- **Milestone 3 Preparation (Rust Protocol Core Engine & Diagnostic Android Application)**:
-  - Protocol core architecture and UniFFI binding interfaces specified in `PROJECT.md` and `docs/architecture/`.
-  - Jetpack Compose UI architecture, Android Keystore security layer, and persistent APS courier service specified.
+- **Milestone 4 Preparation (FaceTime Signaling & Ringing Test)**:
+  - Signaling wire protocols and recipient resolution tested in simulated harnesses; physical iPhone CallKit ringing validation scheduled for Milestone 4.
 
 ---
 
@@ -88,22 +92,12 @@ The following deliverables are currently designed, specified, and in active prep
 
 ## 4. Untested
 
-The following features and functional layers are planned and will be subjected to automated and physical testing in subsequent milestones:
+The following features and functional layers are planned and will be subjected to physical testing in subsequent milestones:
 
-- **Milestone 3 (Rust Core & Android Diagnostic App)**:
-  - Rust protocol core compilation for Android target triples (`aarch64-linux-android`, `x86_64-linux-android`).
-  - UniFFI 0.28+ Kotlin FFI bindings generation and dynamic library loading.
-  - GSA SRP-6a login and interactive 2FA challenge UI on Jetpack Compose.
-  - Persistent APS TLS courier connection across Wi-Fi and cellular handovers.
-  - Android Keystore AES-256-GCM token encryption and in-memory password zeroization.
-  - Diagnostic JSONL bundle exporter with automated regex secret redaction.
 - **Milestone 4 (FaceTime Signaling & Ringing Test)**:
-  - Apple directory lookup (`id-query`) resolving recipient Apple Account email handles.
-  - QuickRelay allocation (command 200).
-  - Outgoing FaceTime invite PDU (command 207) triggering native ringing on physical recipient iPhone.
+  - Physical iPhone incoming CallKit ringing test against physical Apple hardware over live APNs.
 - **Milestone 5 (E2E Testing & Anti-Cheating)**:
-  - Automated Opaque-Box E2E test runner (Tiers 1-4).
-  - Anti-cheating audit falsifying claims and verifying zero donor certs.
+  - Anti-cheating forensic verification audit.
   - Tier 5 adversarial stress-testing.
 
 ---
@@ -111,13 +105,10 @@ The following features and functional layers are planned and will be subjected t
 ## 5. Next Experiment
 
 ### Immediate Next Operational Action:
-- **Initiate Milestone 3 (Rust Protocol Core & Diagnostic Android Application)**:
-  1. Implement Rust Protocol Core Engine implementing GrandSlam SRP-6a, 2FA challenge flow, APS courier connection, and IDS registration pipeline.
-  2. Implement UniFFI 0.28+ bindings and Kotlin FFI bridge.
-  3. Implement Jetpack Compose diagnostic UI with 7-stage IDS pipeline stepper and scrolling diagnostic console.
-  4. Implement Android Keystore hardware-backed token security and secret zeroization.
-  5. Implement persistent APS courier foreground service.
-  6. Implement sanitized diagnostic bundle exporter with automated regex credential redaction.
+- **Initiate Milestone 4 (FaceTime Signaling & Physical Ringing Test)**:
+  1. Verify recipient directory lookup against live APNs courier socket.
+  2. Test QuickRelay media allocation and Command 207 invite dispatch.
+  3. Validate physical iPhone incoming call banner and SpringBoard full-screen UI activation.
 
 ---
 
@@ -132,12 +123,12 @@ The following features and functional layers are planned and will be subjected t
 | **F5** | Device Validation Trait | M2 | COMPLETED | None |
 | **F6** | Zero Apple Hardware Clean Provider | M2 | COMPLETED | None |
 | **F7** | Hard Go/No-Go Enforcement | M2 | COMPLETED | None |
-| **F8** | Rust Protocol Core Engine | M3 | PLANNED | M2 Validation |
-| **F9** | UniFFI / Kotlin FFI Bridge | M3 | PLANNED | F8 |
-| **F10** | Jetpack Compose Diagnostic UI | M3 | PLANNED | F8, F9 |
-| **F11** | Android Keystore Token Security | M3 | PLANNED | F10 |
-| **F12** | Persistent APS Courier Service | M3 | PLANNED | F8, F10 |
-| **F13** | Sanitized Diagnostic Bundle Exporter | M3 | PLANNED | F10, F11 |
+| **F8** | Rust Protocol Core Engine | M3 | COMPLETED | None |
+| **F9** | UniFFI / Kotlin FFI Bridge | M3 | COMPLETED | None |
+| **F10** | Jetpack Compose Diagnostic UI | M3 | COMPLETED | None |
+| **F11** | Android Keystore Token Security | M3 | COMPLETED | None |
+| **F12** | Persistent APS Courier Service | M3 | COMPLETED | None |
+| **F13** | Sanitized Diagnostic Bundle Exporter | M3 | COMPLETED | None |
 | **F14** | Apple Directory Recipient Lookup | M4 | PLANNED | F8, F12 |
 | **F15** | Outgoing FaceTime Invite Signaling | M4 | PLANNED | F14 |
 | **F16** | Decisive Native Ringing (PoC V0) | M4 | PLANNED | F15 |
