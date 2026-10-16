@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use super::error::ValidationError;
 
 /// Identifies the device validation provider variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, uniffi::Enum)]
 pub enum ValidationProviderType {
     /// Deterministic synthetic provider for offline CI and unit tests (flagged MOCK MODE).
     Mock,

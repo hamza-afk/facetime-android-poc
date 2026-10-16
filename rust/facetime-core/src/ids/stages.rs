@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Categorizes the root hardware/cryptographic attestation barrier encountered.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
 pub enum HardwareBarrierType {
     /// FairPlay Absinthe DRM signature missing or failed validation
     FairPlayAbsintheMissing,
@@ -16,7 +16,7 @@ pub enum HardwareBarrierType {
 }
 
 /// 7-stage Identity Services (IDS) registration state machine.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
 pub enum IdsStage {
     /// 1. GrandSlam Auth token, DSID, and PET acquired.
     AuthContextReady,

@@ -3,7 +3,11 @@ name = "facetime-core"
 version = "0.1.0"
 edition = "2021"
 authors = ["FaceTime Android PoC Team"]
-description = "FaceTime Android Protocol Core Engine & Clean-Room Validation Architecture"
+description = "FaceTime Android Protocol Core Engine & UniFFI Cross-Platform Bridge"
+
+[lib]
+name = "facetime_core"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # Serialization & Plist
@@ -13,18 +17,32 @@ plist = "1.6"
 
 # Cryptography & Hashing
 sha2 = "0.10"
+sha1 = "0.10"
 hmac = "0.12"
 ring = "0.17"
 rand = "0.8"
 base64 = "0.22"
 hex = "0.4"
+num-bigint = { version = "0.4", features = ["rand"] }
+pbkdf2 = { version = "0.12", default-features = false }
+rsa = { version = "0.9", features = ["pkcs1"] }
+aes = "0.8"
+cbc = "0.1"
+ctr = "0.9"
 
-# Utilities & Error Handling
+# Utilities & Async
 thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.8", features = ["v4", "v5"] }
+uuid = { version = "1.8", features = ["v4", "v5", "serde"] }
 log = "0.4"
 regex = "1.10"
+tokio = { version = "1.37", features = ["full", "sync", "rt"] }
+
+# UniFFI Bindings
+uniffi = { version = "0.28", features = ["cli", "tokio"] }
+
+[build-dependencies]
+uniffi = { version = "0.28", features = ["build"] }
 
 [dev-dependencies]
 env_logger = "0.11"

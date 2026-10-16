@@ -1,0 +1,162 @@
+namespace facetime_core {};
+
+enum ValidationProviderType {
+    "Mock",
+    "ExistingRustpush",
+    "AndroidExperimental"
+};
+
+enum HardwareBarrierType {
+    "FairPlayAbsintheMissing",
+    "AnisetteHmacRejected",
+    "AlbertActivationRejected",
+    "SecureEnclaveMissing"
+};
+
+[Enum]
+interface IdsStage {
+    AuthContextReady();
+    BagLoaded();
+    PushTokenAcquired();
+    IdentitiesGenerated();
+    ServiceRegistered();
+    Registered();
+    RegistrationFailed(string error, boolean can_retry);
+    RegistrationFailedHardHardwareBlocker(
+        i32 status_code,
+        u16 http_status,
+        string server_error,
+        HardwareBarrierType barrier_type,
+        string report_path
+    );
+};
+
+[Enum]
+interface AuthState {
+    Idle();
+    Authenticating();
+    TwoFactorRequired(string challenge);
+    Authenticated(string dsid, string adsid);
+    AuthFailed(string error);
+    LoggedOut();
+};
+
+[Enum]
+interface ApsStatus {
+    Disconnected();
+    Connecting();
+    Connected(string host, string push_token);
+    ConnectionFailed(string error);
+};
+
+[Enum]
+interface CallState {
+    Idle();
+    Resolving(string handle);
+    QuickRelayAllocating();
+    InviteSending(string call_id);
+    RemoteRinging(string call_id);
+    Connected(string call_id);
+    Declined(string call_id, string reason);
+    Ended(string call_id);
+    Failed(string call_id, string error);
+};
+
+dictionary CoreConfig {
+    string environment;
+    string user_agent;
+    string? courier_host;
+    ValidationProviderType default_provider;
+};
+
+dictionary AppleCredentials {
+    string username;
+    string password;
+};
+
+dictionary AuthSession {
+    string dsid;
+    string adsid;
+    string pet;
+    string? ids_auth_token;
+    string? ids_profile_id;
+    boolean requires_2fa;
+};
+
+dictionary IdsRegistrationResult {
+    IdsStage stage;
+    boolean is_success;
+    boolean is_halted_by_gate;
+    string message;
+    string push_token;
+    sequence<string> handles;
+    sequence<string> registered_services;
+};
+
+dictionary RecipientCapabilities {
+    string handle;
+    boolean is_facetime_capable;
+    string push_token;
+    string session_token;
+    bytes public_key_der;
+    bytes prekey_data;
+};
+
+dictionary CallSession {
+    string call_id;
+    string conversation_id;
+    string recipient_handle;
+    CallState state;
+    string? quick_relay_ip;
+    u16? quick_relay_port;
+};
+
+dictionary DiagnosticEventJsonl {
+    string timestamp;
+    string subsystem;
+    string severity;
+    string event_name;
+    string payload_json;
+};
+
+[Error]
+enum FaceTimeCoreError {
+    "EngineNotInitialized",
+    "AuthFailed",
+    "TwoFactorRequired",
+    "TwoFactorFailed",
+    "ApsError",
+    "IdsRegistrationError",
+    "IdsHardBlocker",
+    "LookupFailed",
+    "CallError",
+    "InternalError"
+};
+
+callback interface FaceTimeCoreEventListener {
+    void on_auth_state_changed(AuthState state);
+    void on_aps_state_changed(ApsStatus status);
+    void on_ids_state_changed(IdsStage stage);
+    void on_call_state_changed(string call_id, CallState state);
+    void on_diagnostic_event(DiagnosticEventJsonl event);
+};
+
+interface FaceTimeCoreEngine {
+    constructor();
+    [Throws=FaceTimeCoreError]
+    void init_engine(CoreConfig config, FaceTimeCoreEventListener listener);
+    [Throws=FaceTimeCoreError]
+    AuthSession authenticate_apple_account(AppleCredentials credentials);
+    [Throws=FaceTimeCoreError]
+    AuthSession submit_two_factor_code(string code);
+    [Throws=FaceTimeCoreError]
+    void connect_aps_courier();
+    [Throws=FaceTimeCoreError]
+    IdsRegistrationResult register_ids_pipeline(ValidationProviderType provider);
+    [Throws=FaceTimeCoreError]
+    RecipientCapabilities lookup_recipient(string handle);
+    [Throws=FaceTimeCoreError]
+    CallSession start_facetime_call(string recipient_handle);
+    [Throws=FaceTimeCoreError]
+    void end_facetime_call(string call_id);
+};
