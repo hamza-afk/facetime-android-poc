@@ -1,13 +1,95 @@
-# Teamwork Agent Metadata
+# ==============================================================================
+# FaceTime Android PoC -- Comprehensive Repository .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Teamwork Agent & Internal Orchestration Metadata
+# ------------------------------------------------------------------------------
 .agents/
 
-# Build and IDE artifacts
+# ------------------------------------------------------------------------------
+# 2. Transient Test & Diagnostic Outputs
+# ------------------------------------------------------------------------------
+tests/e2e/report.json
+tests/e2e/**/report.json
+tests/e2e/**/*report*.json
+tests/e2e/harness/tier5_report.json
+tests/e2e/harness/bin/
+
+# Diagnostic bundles, archives, and staging directories
+*.zip
+*.bundle.zip
+diagnostic_bundle_*.zip
+test_bundle_*.zip
+challenger_audit_bundle_*.zip
+full_scenario_bundle_*.zip
+ft_diag_*
+ft_diag_staging_*
+
+# ------------------------------------------------------------------------------
+# 3. Rust & Cargo Artifacts
+# ------------------------------------------------------------------------------
 target/
-*.log
-*.tmp
+**/target/
+**/*.rs.bk
+Cargo.lock
+
+# ------------------------------------------------------------------------------
+# 4. Android & Gradle Build Artifacts
+# ------------------------------------------------------------------------------
+.gradle/
+build/
+**/build/
+.cxx/
+**/.cxx/
+.externalNativeBuild/
+captures/
+local.properties
+
+# Android application packages & compiled binaries
+*.apk
+*.ap_
+*.aab
+*.dex
+
+# ------------------------------------------------------------------------------
+# 5. Java & JVM Artifacts
+# ------------------------------------------------------------------------------
+bin/
+**/bin/
+*.class
+*.hprof
+*.jar
+!android/gradle/wrapper/gradle-wrapper.jar
+
+# ------------------------------------------------------------------------------
+# 6. IDE & Editor Artifacts
+# ------------------------------------------------------------------------------
 .idea/
 .vscode/
-build/
-.gradle/
-bin/
-*.class
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*~
+*.bak
+
+# ------------------------------------------------------------------------------
+# 7. Operating System Transient Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ------------------------------------------------------------------------------
+# 8. General Logs and Temporary Dumps
+# ------------------------------------------------------------------------------
+*.log
+*.tmp
