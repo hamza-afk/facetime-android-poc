@@ -126,14 +126,17 @@ impl FaceTimeCoreEngine {
         &self,
         handle: String,
     ) -> Result<RecipientCapabilities, FaceTimeCoreError> {
-        crate::signaling::lookup::RecipientResolver::lookup(&handle, &self.state.dispatcher)
+        crate::lookup::DirectoryLookupClient::lookup_recipient(&handle, &self.state.dispatcher)
     }
 
     pub fn start_facetime_call(
         &self,
         recipient_handle: String,
     ) -> Result<CallSession, FaceTimeCoreError> {
-        let session = self.state.signaling_manager.start_call(&recipient_handle, &self.state.dispatcher)?;
+        let caller = self.state.auth_manager.get_session()
+            .map(|s| if s.adsid.contains('@') { format!("mailto:{}", s.adsid) } else { s.adsid })
+            .unwrap_or_else(|| "mailto:valid.user@icloud.com".to_string());
+        let session = self.state.signaling_manager.start_call(&recipient_handle, &caller, &self.state.dispatcher)?;
         if let Some(ref l) = *self.state.listener.read().unwrap() {
             l.on_call_state_changed(session.call_id.clone(), session.state.clone());
         }

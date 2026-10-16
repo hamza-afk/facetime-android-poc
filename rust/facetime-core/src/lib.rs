@@ -11,6 +11,7 @@ pub mod bridge;
 pub mod engine;
 pub mod events;
 pub mod ids;
+pub mod lookup;
 pub mod signaling;
 pub mod validation;
 
@@ -22,6 +23,7 @@ pub use bridge::{
 };
 pub use engine::FaceTimeCoreEngine;
 pub use events::{DiagnosticEvent, EventDispatcher};
+pub use lookup::DirectoryLookupClient;
 pub use ids::stages::{HardwareBarrierType, IdsStage};
 pub use validation::{
     create_validation_provider, AndroidDeviceProfile, AndroidExperimentalValidationProvider,

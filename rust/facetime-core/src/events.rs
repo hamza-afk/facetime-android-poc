@@ -29,6 +29,33 @@ pub enum DiagnosticEvent {
         payload_size: usize,
         is_clean_room: bool,
     },
+
+    #[serde(rename = "RECIPIENT_LOOKUP_STARTED")]
+    RecipientLookupStarted {
+        raw_handle: String,
+        normalized_uri: String,
+    },
+
+    #[serde(rename = "RECIPIENT_LOOKUP_SUCCESS")]
+    RecipientLookupSuccess {
+        handle: String,
+        is_facetime_capable: bool,
+        push_token_len: usize,
+    },
+
+    #[serde(rename = "RECIPIENT_LOOKUP_FAILED")]
+    RecipientLookupFailed {
+        handle: String,
+        status_code: u64,
+        reason: String,
+    },
+
+    #[serde(rename = "CALL_STATE_CHANGED")]
+    CallStateChanged {
+        call_id: String,
+        previous_state: String,
+        new_state: String,
+    },
 }
 
 /// Simple thread-safe event dispatcher for routing events to callbacks or logs.

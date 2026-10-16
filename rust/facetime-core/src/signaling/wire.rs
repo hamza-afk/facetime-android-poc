@@ -1,6 +1,8 @@
-//! Command 200 QuickRelay allocation and Command 207 `FTWireMessage` invite envelope.
+//! Command 200 QuickRelay allocation and Command 207 `FTWireMessage` invite envelope wire utilities.
 
 use crate::bridge::error::FaceTimeCoreError;
+use crate::signaling::invite::InviteBuilder;
+use crate::signaling::relay::QuickRelayClient;
 
 pub struct SignalingWire;
 
@@ -10,24 +12,39 @@ impl SignalingWire {
         call_uuid: &str,
         caller_handle: &str,
         recipient_handle: &str,
-        _recipient_push_token: &str,
+        recipient_push_token: &str,
     ) -> Result<Vec<u8>, FaceTimeCoreError> {
-        // Envelopes FTWireMessage with Command 207
-        let xml = format!(
-            "<dict><key>c</key><integer>207</integer><key>sP</key><string>{}</string><key>tP</key><string>{}</string><key>callId</key><string>{}</string></dict>",
-            caller_handle, recipient_handle, call_uuid
-        );
-        Ok(xml.into_bytes())
+        let push_bytes = if let Ok(decoded) = hex::decode(recipient_push_token) {
+            decoded
+        } else {
+            recipient_push_token.as_bytes().to_vec()
+        };
+
+        InviteBuilder::build_outgoing_invite(
+            call_uuid,
+            caller_handle,
+            recipient_handle,
+            &push_bytes,
+            b"SESSION-TOKEN-DEFAULT",
+            &[0x04; 65],
+            &[0x30; 128],
+            &[0xAA; 32],
+            183921049281729381,
+            true,
+        )
     }
 
     /// Formats an outgoing Command 200 QuickRelay allocation request.
     pub fn build_quickrelay_command_200(
         call_uuid: &str,
     ) -> Result<Vec<u8>, FaceTimeCoreError> {
-        let xml = format!(
-            "<dict><key>c</key><integer>200</integer><key>callId</key><string>{}</string><key>qat</key><integer>3</integer><key>qgmc</key><integer>2</integer></dict>",
-            call_uuid
-        );
-        Ok(xml.into_bytes())
+        let (bytes, _) = QuickRelayClient::build_allocation_request(
+            call_uuid,
+            "mailto:caller@example.com",
+            "mailto:recipient@example.com",
+            &[0x01; 32],
+            b"SESSION-TOKEN-DEFAULT",
+        )?;
+        Ok(bytes)
     }
 }
