@@ -178,6 +178,15 @@ impl InviteBuilder {
         Ok((simulated_cipher, "pair-ec".to_string()))
     }
 
+    /// Encodes an unsigned integer as an LEB128 varint into the destination buffer
+    pub fn write_varint(buf: &mut Vec<u8>, mut val: usize) {
+        while val >= 0x80 {
+            buf.push((val as u8 & 0x7F) | 0x80);
+            val >>= 7;
+        }
+        buf.push(val as u8);
+    }
+
     /// Encodes ConversationParticipantDidJoinContext protobuf with notificationStyles: 1
     pub fn encode_join_context(
         session_uuid: &str,
@@ -195,19 +204,19 @@ impl InviteBuilder {
         // Member 1: caller
         let mut member1 = Vec::new();
         member1.push(0x12); // tag 2 (handle), wire 2
-        member1.push(caller_handle.len() as u8);
+        Self::write_varint(&mut member1, caller_handle.len());
         member1.extend_from_slice(caller_handle.as_bytes());
         buf.push(0x12); // tag 2 (members), wire 2
-        buf.push(member1.len() as u8);
+        Self::write_varint(&mut buf, member1.len());
         buf.extend_from_slice(&member1);
 
         // Member 2: recipient
         let mut member2 = Vec::new();
         member2.push(0x12); // tag 2 (handle), wire 2
-        member2.push(recipient_handle.len() as u8);
+        Self::write_varint(&mut member2, recipient_handle.len());
         member2.extend_from_slice(recipient_handle.as_bytes());
         buf.push(0x12); // tag 2 (members), wire 2
-        buf.push(member2.len() as u8);
+        Self::write_varint(&mut buf, member2.len());
         buf.extend_from_slice(&member2);
 
         // Field 3: ConversationMessage message
@@ -218,7 +227,7 @@ impl InviteBuilder {
         msg_buf.extend_from_slice(&[0x10, 0x01]);
         // msg.conversation_group_uuid_string (tag 5, wire 2)
         msg_buf.push(0x2A);
-        msg_buf.push(session_uuid.len() as u8);
+        Self::write_varint(&mut msg_buf, session_uuid.len());
         msg_buf.extend_from_slice(session_uuid.as_bytes());
 
         // msg.invitation_preferences (tag 19, wire 2 = (19 << 3) | 2 = 154 = 0x9A, 0x01)
@@ -226,18 +235,18 @@ impl InviteBuilder {
         pref_buf.extend_from_slice(&[0x08, 0x03]); // preference_type = 3 (Email) / Generic
         pref_buf.extend_from_slice(&[0x10, 0x01]); // notificationStyles = 1 (STANDARD_RINGING)
         msg_buf.extend_from_slice(&[0x9A, 0x01]);
-        msg_buf.push(pref_buf.len() as u8);
+        Self::write_varint(&mut msg_buf, pref_buf.len());
         msg_buf.extend_from_slice(&pref_buf);
 
         // Append msg to outer buf
         buf.push(0x1A); // tag 3 (message), wire 2
-        buf.push(msg_buf.len() as u8);
+        Self::write_varint(&mut buf, msg_buf.len());
         buf.extend_from_slice(&msg_buf);
 
         // Field 6: provider_identifier (tag 6, wire 2 = 0x32)
         let provider = b"com.apple.telephonyutilities.callservicesd.FaceTimeProvider";
         buf.push(0x32);
-        buf.push(provider.len() as u8);
+        Self::write_varint(&mut buf, provider.len());
         buf.extend_from_slice(provider);
 
         // Field 7: video (tag 7, varint = 0x38)

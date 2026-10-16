@@ -9,7 +9,7 @@ static E164_REGEX: OnceLock<Regex> = OnceLock::new();
 
 fn get_email_regex() -> &'static Regex {
     EMAIL_REGEX.get_or_init(|| {
-        Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap()
+        Regex::new(r"^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$").unwrap()
     })
 }
 
@@ -105,10 +105,12 @@ impl HandleNormalizer {
             trimmed
         };
 
-        for (i, ch) in s.chars().enumerate() {
-            if ch == '+' && i == 0 {
+        let mut seen_digit = false;
+        for ch in s.chars() {
+            if ch == '+' && !seen_digit && !digits.starts_with('+') {
                 digits.push('+');
             } else if ch.is_ascii_digit() {
+                seen_digit = true;
                 digits.push(ch);
             } else if ch == ' ' || ch == '-' || ch == '(' || ch == ')' || ch == '.' {
                 continue;
@@ -155,6 +157,10 @@ mod tests {
 
         let r2 = HandleNormalizer::normalize("mailto:Bob.Smith+tag@icloud.com").unwrap();
         assert_eq!(r2.to_uri(), "mailto:bob.smith+tag@icloud.com");
+
+        // Reject consecutive dots
+        assert!(HandleNormalizer::normalize("user@example..com").is_err());
+        assert!(HandleNormalizer::normalize("user@.example.com").is_err());
     }
 
     #[test]
@@ -170,6 +176,10 @@ mod tests {
 
         let r4 = HandleNormalizer::normalize("tel:+1 (555) 555-0100").unwrap();
         assert_eq!(r4.to_uri(), "tel:+15555550100");
+
+        // Parenthesized country code
+        let r5 = HandleNormalizer::normalize("(+1) 555-0100").unwrap();
+        assert_eq!(r5.to_uri(), "tel:+15555550100");
     }
 
     #[test]

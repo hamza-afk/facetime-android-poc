@@ -58,10 +58,12 @@ pub enum DiagnosticEvent {
     },
 }
 
+use std::sync::Arc;
+
 /// Simple thread-safe event dispatcher for routing events to callbacks or logs.
 #[derive(Default)]
 pub struct EventDispatcher {
-    handlers: std::sync::RwLock<Vec<Box<dyn Fn(&DiagnosticEvent) + Send + Sync>>>,
+    handlers: std::sync::RwLock<Vec<Arc<dyn Fn(&DiagnosticEvent) + Send + Sync>>>,
 }
 
 impl EventDispatcher {
@@ -76,12 +78,12 @@ impl EventDispatcher {
         F: Fn(&DiagnosticEvent) + Send + Sync + 'static,
     {
         let mut handlers = self.handlers.write().unwrap();
-        handlers.push(Box::new(handler));
+        handlers.push(Arc::new(handler));
     }
 
     pub fn emit_event(&self, event: DiagnosticEvent) {
-        let handlers = self.handlers.read().unwrap();
-        for handler in handlers.iter() {
+        let handlers: Vec<_> = self.handlers.read().unwrap().clone();
+        for handler in handlers {
             handler(&event);
         }
     }

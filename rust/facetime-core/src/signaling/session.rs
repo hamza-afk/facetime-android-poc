@@ -158,18 +158,23 @@ impl SignalingManager {
 
         let call_id = ctx.session.call_id.clone();
 
+        let mut clear_session = false;
+
         match (command_code, action_type) {
             // Command 210 or Command 207 (type 3): Recipient Answered
             (210, _) | (207, 3) => {
-                ctx.session.state = CallState::Connected { call_id: call_id.clone() };
-                dispatcher.emit_event(DiagnosticEvent::CallStateChanged {
-                    call_id,
-                    previous_state: "RemoteRinging".to_string(),
-                    new_state: "Connected".to_string(),
-                });
+                if matches!(ctx.session.state, CallState::RemoteRinging { .. }) {
+                    ctx.session.state = CallState::Connected { call_id: call_id.clone() };
+                    dispatcher.emit_event(DiagnosticEvent::CallStateChanged {
+                        call_id,
+                        previous_state: "RemoteRinging".to_string(),
+                        new_state: "Connected".to_string(),
+                    });
+                }
             }
             // Command 242 (type 9): Recipient Declined
             (242, 9) => {
+                clear_session = true;
                 ctx.session.state = CallState::Declined {
                     call_id: call_id.clone(),
                     reason: "Recipient declined call".to_string(),
@@ -182,6 +187,7 @@ impl SignalingManager {
             }
             // Command 208: Leave / Hangup
             (208, _) => {
+                clear_session = true;
                 ctx.session.state = CallState::Ended { call_id: call_id.clone() };
                 dispatcher.emit_event(DiagnosticEvent::CallStateChanged {
                     call_id,
@@ -192,12 +198,17 @@ impl SignalingManager {
             _ => {}
         }
 
+        if clear_session {
+            *session_guard = None;
+        }
+
         Ok(())
     }
 
     /// Ends active call session (Caller Hangup)
     pub fn end_call(&self, call_id: &str, dispatcher: &EventDispatcher) -> Result<(), FaceTimeCoreError> {
         let mut session_guard = self.active_session.write().unwrap();
+        let mut matched = false;
         if let Some(ref mut ctx) = *session_guard {
             if ctx.session.call_id == call_id {
                 let prev_state = format!("{:?}", ctx.session.state);
@@ -207,9 +218,12 @@ impl SignalingManager {
                     previous_state: prev_state,
                     new_state: "Ended".to_string(),
                 });
+                matched = true;
             }
         }
-        *session_guard = None;
+        if matched {
+            *session_guard = None;
+        }
         Ok(())
     }
 
@@ -269,7 +283,7 @@ mod tests {
         // Simulate Recipient Decline
         mgr.handle_control_event(242, 9, &dispatcher).expect("Handle decline");
         let active = mgr.active_session.read().unwrap();
-        assert!(matches!(active.as_ref().unwrap().session.state, CallState::Declined { .. }));
+        assert!(active.is_none(), "Active session must be cleared on terminal Declined state");
     }
 
     #[test]
