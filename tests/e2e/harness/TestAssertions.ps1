@@ -102,7 +102,7 @@ function Assert-WirePduValid([hashtable]$pdu, [string[]]$requiredKeys, [string]$
 # Asserts that text or data structure contains ZERO unredacted sensitive tokens, passwords, or keys
 function Assert-Redacted([string]$content) {
     $sensitivePatterns = @(
-        'password\s*[:=]\s*["''][^"''\s]{4,}["'']',
+        '(("?password"?)\s*[:=]\s*["''][^"''\s]{4,}["''])',
         'com\.apple\.gs\.idms\.pet\s*[:=]\s*["''][^"''\s]{16,}["'']',
         'PET-[0-9a-zA-Z]{32,}',
         '-----BEGIN RSA PRIVATE KEY-----',

@@ -15,10 +15,14 @@ class DiagnosticEventLog {
         "PASSWORD_RULE" = '("password"\s*:\s*")[^"]+(")|("leakTest"\s*:\s*")[^"]+(")|CorrectPassword123!';
         "PET_TOKEN_RULE" = '("pet"\s*:\s*")[^"]+(")|PET-[a-zA-Z0-9_-]+';
         "GS_TOKEN_RULE" = '("X-Apple-GS-Token"\s*:\s*")[^"]+(")|GS-TOKEN-[a-zA-Z0-9_-]+';
-        "AUTH_TOKEN_RULE" = '("auth_token"\s*:\s*")[^"]+(")';
+        "AUTH_TOKEN_RULE" = '("auth[-_]token"\s*:\s*")[^"]+(")';
+        "PUSH_TOKEN_RULE" = '(?i)("(?:recipient_push_token|caller_push_token|push_token|pushToken)"\s*:\s*")[^"\s]{16,}(")';
+        "QRSK_KEY_RULE" = '(?i)("(?:qrsk|session_key|relayKey|relay_key)"\s*:\s*")[^"\s]{16,}(")';
+        "QRST_TICKET_RULE" = '(?i)("(?:qrst|relayTicket|relay_ticket)"\s*:\s*")[^"\s]{16,}(")';
         "PRIVATE_KEY_PEM" = '-----BEGIN (RSA |EC )?PRIVATE KEY-----[\s\S]*?-----END (RSA |EC )?PRIVATE KEY-----';
         "SECURITY_CODE_RULE" = '("security-code"\s*:\s*")[0-9]{6}(")';
         "DSID_RULE" = '("dsid"\s*:\s*)[0-9]{8,12}';
+        "DSID_PARAM_OR_HEADER" = '(?i)(?:dsid|X-Apple-DSID)["'':\s=]+([0-9]{8,12})';
     }
 
     [string] RedactString([string]$raw) {
@@ -39,13 +43,21 @@ class DiagnosticEventLog {
                     $redacted = [regex]::Replace($redacted, '("X-Apple-GS-Token"\s*:\s*")[^"]+(")', '$1<REDACTED_AUTH_TOKEN>$2')
                     $redacted = [regex]::Replace($redacted, 'GS-TOKEN-[a-zA-Z0-9_-]+', '<REDACTED_AUTH_TOKEN>')
                 } elseif ($ruleName -eq "AUTH_TOKEN_RULE") {
-                    $redacted = [regex]::Replace($redacted, '("auth_token"\s*:\s*")[^"]+(")', '$1<REDACTED_AUTH_TOKEN>$2')
+                    $redacted = [regex]::Replace($redacted, '("auth[-_]token"\s*:\s*")[^"]+(")', '$1<REDACTED_AUTH_TOKEN>$2')
+                } elseif ($ruleName -eq "PUSH_TOKEN_RULE") {
+                    $redacted = [regex]::Replace($redacted, $pattern, '$1<REDACTED_PUSH_TOKEN>$2')
+                } elseif ($ruleName -eq "QRSK_KEY_RULE") {
+                    $redacted = [regex]::Replace($redacted, $pattern, '$1<REDACTED_SESSION_KEY>$2')
+                } elseif ($ruleName -eq "QRST_TICKET_RULE") {
+                    $redacted = [regex]::Replace($redacted, $pattern, '$1<REDACTED_RELAY_TICKET>$2')
                 } elseif ($ruleName -eq "PRIVATE_KEY_PEM") {
                     $redacted = [regex]::Replace($redacted, $pattern, '<REDACTED_PRIVATE_KEY>')
                 } elseif ($ruleName -eq "SECURITY_CODE_RULE") {
                     $redacted = [regex]::Replace($redacted, $pattern, '$1<REDACTED_CODE>$2')
                 } elseif ($ruleName -eq "DSID_RULE") {
                     $redacted = [regex]::Replace($redacted, $pattern, '$1<REDACTED_DSID>')
+                } elseif ($ruleName -eq "DSID_PARAM_OR_HEADER") {
+                    $redacted = [regex]::Replace($redacted, $pattern, 'dsid=<REDACTED_DSID>')
                 }
             }
         }
@@ -99,6 +111,19 @@ class DiagnosticEventLog {
             # 4. redaction_audit.log
             $auditPath = [System.IO.Path]::Combine($tempDir, "redaction_audit.log")
             [System.IO.File]::WriteAllLines($auditPath, $this.redactionAuditEntries)
+
+            # 5. checksum.sha256
+            $checksumPath = [System.IO.Path]::Combine($tempDir, "checksum.sha256")
+            $sha256 = [System.Security.Cryptography.SHA256]::Create()
+            $manifestLines = [System.Collections.Generic.List[string]]::new()
+            foreach ($item in @($eventsPath, $envPath, $netPath, $auditPath)) {
+                $bytes = [System.IO.File]::ReadAllBytes($item)
+                $hash = $sha256.ComputeHash($bytes)
+                $hex = ($hash | ForEach-Object { $_.ToString("x2") }) -join ""
+                $name = [System.IO.Path]::GetFileName($item)
+                $manifestLines.Add("$hex  $name")
+            }
+            [System.IO.File]::WriteAllLines($checksumPath, $manifestLines)
 
             if ([System.IO.File]::Exists($targetZipPath)) {
                 [System.IO.File]::Delete($targetZipPath)

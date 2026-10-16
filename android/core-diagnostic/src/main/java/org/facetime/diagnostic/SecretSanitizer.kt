@@ -96,13 +96,13 @@ object SecretSanitizer {
         ),
         RedactionRule(
             name = "AUTH_TOKEN_JSON",
-            regex = Regex("""("auth_token"\s*:\s*")[^"]*(")"""),
+            regex = Regex("""("auth[-_]token"\s*:\s*")[^"]*(")"""),
             squareReplacement = "$1[REDACTED_AUTH_TOKEN]$2",
             angleReplacement = "$1<REDACTED_AUTH_TOKEN>$2"
         ),
         RedactionRule(
             name = "GENERIC_AUTH_TOKEN",
-            regex = Regex("""(?i)(auth_token|authToken|sessionToken|peToken)["':\s=]+([^"',&\s]{16,})"""),
+            regex = Regex("""(?i)(auth[-_]token|authToken|sessionToken|peToken)["':\s=]+([^"',&\s]{16,})"""),
             squareReplacement = "$1=[REDACTED_AUTH_TOKEN]",
             angleReplacement = "$1=<REDACTED_AUTH_TOKEN>"
         ),
@@ -154,6 +154,12 @@ object SecretSanitizer {
             squareReplacement = "$1[REDACTED_DSID]$2",
             angleReplacement = "$1<REDACTED_DSID>$2"
         ),
+        RedactionRule(
+            name = "DSID_PARAM_OR_HEADER",
+            regex = Regex("""(?i)(?:dsid|X-Apple-DSID)["':\s=]+([0-9]{8,12})"""),
+            squareReplacement = "dsid=[REDACTED_DSID]",
+            angleReplacement = "dsid=<REDACTED_DSID>"
+        ),
 
         // 7. Hardware Identity Blobs & Clean-Room Guards
         RedactionRule(
@@ -175,6 +181,26 @@ object SecretSanitizer {
             regex = Regex("""(?i)Authorization:\s*(Bearer|Basic)\s+[A-Za-z0-9+/=._-]+"""),
             squareReplacement = "Authorization: $1 [REDACTED_AUTH]",
             angleReplacement = "Authorization: $1 <REDACTED_AUTH>"
+        ),
+
+        // 9. Call Signaling & Relay Secrets
+        RedactionRule(
+            name = "PUSH_TOKEN_JSON",
+            regex = Regex("""(?i)("(?:recipient_push_token|caller_push_token|push_token|pushToken)"\s*:\s*")[^"\s]{16,}(")"""),
+            squareReplacement = "$1[REDACTED_PUSH_TOKEN]$2",
+            angleReplacement = "$1<REDACTED_PUSH_TOKEN>$2"
+        ),
+        RedactionRule(
+            name = "QRSK_SESSION_KEY_JSON",
+            regex = Regex("""(?i)("(?:qrsk|session_key|relayKey|relay_key)"\s*:\s*")[^"\s]{16,}(")"""),
+            squareReplacement = "$1[REDACTED_SESSION_KEY]$2",
+            angleReplacement = "$1<REDACTED_SESSION_KEY>$2"
+        ),
+        RedactionRule(
+            name = "QRST_TICKET_JSON",
+            regex = Regex("""(?i)("(?:qrst|relayTicket|relay_ticket)"\s*:\s*")[^"\s]{16,}(")"""),
+            squareReplacement = "$1[REDACTED_RELAY_TICKET]$2",
+            angleReplacement = "$1<REDACTED_RELAY_TICKET>$2"
         )
     )
 
