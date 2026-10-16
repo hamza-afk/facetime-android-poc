@@ -1,0 +1,11 @@
+# Teamwork Agent Metadata
+.agents/
+
+# Build and IDE artifacts
+target/
+*.log
+*.tmp
+.idea/
+.vscode/
+build/
+.gradle/

@@ -1,0 +1,3 @@
+# Quilt-style patch series file for vendor/rustpush
+# Format: one patch filename per line, ordered sequentially.
+# In Milestone 1, zero patches are applied; vendor/rustpush remains pristine upstream.
